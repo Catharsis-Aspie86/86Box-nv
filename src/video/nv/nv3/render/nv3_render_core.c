@@ -260,7 +260,7 @@ uint32_t nv3_render_get_vram_address(nv3_coord_16_t position, nv3_grobj_t grobj)
 
 
 /* Combine the current buffer with the pitch to get the address in the video ram for a specific position relative to a specific framebuffer */
-uint32_t nv3_render_get_vram_address_for_buffer(nv3_coord_16_t position, nv3_grobj_t grobj, uint32_t buffer)
+uint32_t nv3_render_get_vram_address_for_buffer(nv3_coord_16_t position, uint32_t buffer)
 {
     uint32_t vram_x = position.x;
     uint32_t vram_y = position.y;
@@ -300,8 +300,6 @@ nv3_coord_16_t nv3_render_get_dfb_position(uint32_t vram_address)
         pitch <<= 1;
     else if (nv3->nvbase.svga.bpp == 32)
         pitch <<= 2;
-
-    //vram_address -= nv3->pgraph.boffset[0];
 
     pos.y = (vram_address / pitch);
     pos.x = (vram_address % pitch);
@@ -529,6 +527,10 @@ void nv3_render_ensure_screen_size(void)
 /* Blit to the monitor from DFB, 8bpp */
 void nv3_render_current_bpp_dfb_8(uint32_t address)
 {
+    /* Broken as fuck early vbios does this. Wtf? */
+    if (!nv3->nvbase.svga.hdisp)
+        return;
+
     nv3_coord_16_t size = {0};
     size.x = size.y = 1; 
 
@@ -543,6 +545,10 @@ void nv3_render_current_bpp_dfb_8(uint32_t address)
 /* Blit to the monitor from DFB, 15/16bpp */
 void nv3_render_current_bpp_dfb_16(uint32_t address)
 {
+    /* Broken as fuck early vbios does this. Wtf? */
+    if (!nv3->nvbase.svga.hdisp)
+        return;
+    
     nv3_coord_16_t size = {0};
     size.x = size.y = 1; 
 
@@ -564,6 +570,10 @@ void nv3_render_current_bpp_dfb_16(uint32_t address)
 /* Blit to the monitor from DFB, 32bpp */
 void nv3_render_current_bpp_dfb_32(uint32_t address)
 {
+    /* Broken as fuck early vbios does this. Wtf? */
+    if (!nv3->nvbase.svga.hdisp)
+        return;
+        
     nv3_coord_16_t size = {0};
     size.x = size.y = 1; 
 
@@ -663,7 +673,7 @@ void nv3_render_8bpp(nv3_coord_16_t pos, nv3_coord_16_t size, nv3_grobj_t grobj,
     {
         /* re-set the vram address because we are basically "jumping" halfway across a line here */
         if (use_destination_buffer)
-            vram_base = nv3_render_get_vram_address_for_buffer(pos, grobj, 0); // hardcode to zero for now
+            vram_base = nv3_render_get_vram_address_for_buffer(pos, 0); // hardcode to zero for now
         else
             vram_base = nv3_render_get_vram_address(pos, grobj) & nv3->nvbase.svga.vram_display_mask;
 
@@ -704,7 +714,7 @@ void nv3_render_15bpp(nv3_coord_16_t pos, nv3_coord_16_t size, nv3_grobj_t grobj
     {
         /* re-set the vram address because we are basically "jumping" halfway across a line here */
         if (use_destination_buffer)
-            vram_base = nv3_render_get_vram_address_for_buffer(pos, grobj, 0); // hardcode to zero for now
+            vram_base = nv3_render_get_vram_address_for_buffer(pos, 0); // hardcode to zero for now
         else
             vram_base = nv3_render_get_vram_address(pos, grobj) & nv3->nvbase.svga.vram_display_mask;
 
@@ -745,7 +755,7 @@ void nv3_render_16bpp(nv3_coord_16_t pos, nv3_coord_16_t size, nv3_grobj_t grobj
     {
         /* re-set the vram address because we are basically "jumping" halfway across a line here */
         if (use_destination_buffer)
-            vram_base = nv3_render_get_vram_address_for_buffer(pos, grobj, 0); // hardcode to zero for now
+            vram_base = nv3_render_get_vram_address_for_buffer(pos, 0); // hardcode to zero for now
         else
             vram_base = nv3_render_get_vram_address(pos, grobj) & nv3->nvbase.svga.vram_display_mask;
 
@@ -786,7 +796,7 @@ void nv3_render_32bpp(nv3_coord_16_t pos, nv3_coord_16_t size, nv3_grobj_t grobj
     {
         /* re-set the vram address because we are basically "jumping" halfway across a line here */
         if (use_destination_buffer)
-            vram_base = nv3_render_get_vram_address_for_buffer(pos, grobj, 0); // hardcode to zero for now
+            vram_base = nv3_render_get_vram_address_for_buffer(pos, 0); // hardcode to zero for now
         else
             vram_base = nv3_render_get_vram_address(pos, grobj) & nv3->nvbase.svga.vram_display_mask;
 

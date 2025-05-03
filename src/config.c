@@ -746,7 +746,7 @@ load_ports(void)
     char          temp[512];
     memset(temp, 0, sizeof(temp));
 
-    for (int c = 0; c < SERIAL_MAX; c++) {
+    for (int c = 0; c < (SERIAL_MAX - 1); c++) {
         sprintf(temp, "serial%d_enabled", c + 1);
         com_ports[c].enabled = !!ini_section_get_int(cat, temp, (c >= 2) ? 0 : 1);
 
@@ -1772,23 +1772,25 @@ load_keybinds(void)
     char          temp[512];
     memset(temp, 0, sizeof(temp));
 
-	// Now load values from config
-	for(int x=0;x<NUM_ACCELS;x++)
-	{
-		p = ini_section_get_string(cat, acc_keys[x].name, "none");
-		// If there's no binding in the file, leave it alone.
-		if (strcmp(p, "none") != 0)
-		{
-			// It would be ideal to validate whether the user entered a
-			// valid combo at this point, but the Qt method for testing that is
-			// not available from C. Fortunately, if you feed Qt an invalid
-			// keysequence string it just assigns nothing, so this won't blow up.
-			// However, to improve the user experience, we should validate keys
-			// and erase any bad combos from config on mainwindow load.
-			
-			strcpy(acc_keys[x].seq, p);
-		}
-	}
+    /* Now load values from config */
+    for (int x = 0; x < NUM_ACCELS; x++) {
+         p = ini_section_get_string(cat, acc_keys[x].name, "default");
+         /* Check if the binding was marked as cleared */
+         if (strcmp(p, "none") == 0)
+             acc_keys[x].seq[0] = '\0';
+         /* If there's no binding in the file, leave it alone. */
+         else if (strcmp(p, "default") != 0) {
+             /*
+                It would be ideal to validate whether the user entered a
+                valid combo at this point, but the Qt method for testing that is
+                not available from C. Fortunately, if you feed Qt an invalid
+                keysequence string it just assigns nothing, so this won't blow up.
+                However, to improve the user experience, we should validate keys
+                and erase any bad combos from config on mainwindow load.
+              */
+             strcpy(acc_keys[x].seq, p);
+        }
+    }
 }
 
 /* Load the specified or a default configuration file. */
@@ -1837,7 +1839,7 @@ config_load(void)
 
         com_ports[0].enabled = 1;
         com_ports[1].enabled = 1;
-        for (i = 2; i < SERIAL_MAX; i++)
+        for (i = 2; i < (SERIAL_MAX - 1); i++)
             com_ports[i].enabled = 0;
 
         lpt_ports[0].enabled = 1;
@@ -1892,7 +1894,7 @@ config_load(void)
 #ifndef USE_SDL_UI
         load_gl3_shaders();             /* GL3 Shaders */
 #endif
-		load_keybinds();				/* Load shortcut keybinds */
+        load_keybinds();                /* Load shortcut keybinds */
 
         /* Migrate renamed device configurations. */
         c = ini_find_section(config, "MDA");
@@ -2457,7 +2459,7 @@ save_ports(void)
     ini_section_t cat = ini_find_or_create_section(config, "Ports (COM & LPT)");
     char          temp[512];
 
-    for (int c = 0; c < SERIAL_MAX; c++) {
+    for (int c = 0; c < (SERIAL_MAX - 1); c++) {
         sprintf(temp, "serial%d_enabled", c + 1);
         if (((c < 2) && com_ports[c].enabled) || ((c >= 2) && !com_ports[c].enabled))
             ini_section_delete_var(cat, temp);
@@ -2524,16 +2526,16 @@ save_keybinds(void)
 {
     ini_section_t cat = ini_find_or_create_section(config, "Keybinds");
 
-	for(int x=0;x<NUM_ACCELS;x++)
-	{
-		// Has accelerator been changed from default?
-		if (strcmp(def_acc_keys[x].seq, acc_keys[x].seq) == 0)
-		{
-			ini_section_delete_var(cat, acc_keys[x].name);
-		} else {
-			ini_section_set_string(cat, acc_keys[x].name, acc_keys[x].seq);
-		}
-	}
+    for (int x = 0; x < NUM_ACCELS; x++) {
+        /* Has accelerator been changed from default? */
+        if (strcmp(def_acc_keys[x].seq, acc_keys[x].seq) == 0)
+            ini_section_delete_var(cat, acc_keys[x].name);
+        /* Check for a cleared binding to avoid saving it as an empty string */
+        else if (acc_keys[x].seq[0] == '\0')
+            ini_section_set_string(cat, acc_keys[x].name, "none");
+        else
+            ini_section_set_string(cat, acc_keys[x].name, acc_keys[x].seq);
+    }
 
     ini_delete_section_if_empty(config, cat);
 }
@@ -3148,7 +3150,7 @@ config_save(void)
 #ifndef USE_SDL_UI
     save_gl3_shaders();             /* GL3 Shaders */
 #endif
-	save_keybinds();				/* Key bindings */
+    save_keybinds();                /* Key bindings */
 
     ini_write(config, cfg_path);
 }
