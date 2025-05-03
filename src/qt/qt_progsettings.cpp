@@ -198,7 +198,7 @@ ProgSettings::loadTranslators(QObject *parent)
     if (lang_id == 0 || lang_id >= languages.length()) {
         for (int i = 0; i < QLocale::system().uiLanguages().size(); i++) {
             localetofilename = QLocale::system().uiLanguages()[i];
-            if (translator->load(QLatin1String("86box_") + localetofilename, QLatin1String(":/"))) {
+            if (translator->load(QLatin1String("pcbox_") + localetofilename, QLatin1String(":/"))) {
                 qDebug() << "Translations loaded.\n";
                 QCoreApplication::installTranslator(translator);
                 if (!qtTranslator->load(QLatin1String("qtbase_") + localetofilename.replace('-', '_'), QLibraryInfo::location(QLibraryInfo::TranslationsPath)))
@@ -213,7 +213,7 @@ ProgSettings::loadTranslators(QObject *parent)
             }
         }
     } else {
-        translator->load(QLatin1String("86box_") + languages[lang_id].first, QLatin1String(":/"));
+        translator->load(QLatin1String("pcbox_") + languages[lang_id].first, QLatin1String(":/"));
         QCoreApplication::installTranslator(translator);
         if (!qtTranslator->load(QLatin1String("qtbase_") + QString(languages[lang_id].first).replace('-', '_'), QLibraryInfo::location(QLibraryInfo::TranslationsPath)))
             if (!qtTranslator->load(QLatin1String("qtbase_") + QString(languages[lang_id].first).left(QString(languages[lang_id].first).indexOf('-')), QLibraryInfo::location(QLibraryInfo::TranslationsPath)))

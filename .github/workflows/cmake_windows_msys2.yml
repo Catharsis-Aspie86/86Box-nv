@@ -9,6 +9,7 @@ on:
       - "**/CMakeLists.txt"
       - "CMakePresets.json"
       - .github/workflows/cmake_windows_msys2.yml
+      - .github/workflows/make_release.yml
       - vcpkg.json
       - "!**/Makefile*"
 
@@ -40,6 +41,8 @@ jobs:
       fail-fast: true
       matrix:
         build:
+          - name: Regular
+            preset: regular
           - name: Dev Debug
             preset: dev_debug
             slug: -Dev-Debug
@@ -127,5 +130,5 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: '86Box${{ matrix.dynarec.slug }}${{ matrix.build.slug }}-Windows${{ matrix.environment.slug }}-gha${{ github.run_number }}'
+          name: 'PCBox${{ matrix.dynarec.slug }}${{ matrix.build.slug }}-Windows${{ matrix.environment.slug }}-gha${{ github.run_number }}'
           path: build/artifacts/**

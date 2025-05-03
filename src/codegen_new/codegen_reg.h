@@ -135,7 +135,9 @@ enum {
     IREG_eaa16 = 88,
     IREG_x87_op = 89,
 
-    IREG_COUNT = 90,
+    IREG_sse_xmm = 90,
+
+    IREG_COUNT = 91,
 
     IREG_INVALID = 255,
 

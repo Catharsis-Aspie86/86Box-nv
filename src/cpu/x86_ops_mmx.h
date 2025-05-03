@@ -21,17 +21,48 @@
         CLOCK_CYCLES(2);                           \
     }
 
+#define SSE_GETSRC()                                      \
+    if (cpu_mod == 3) {                                   \
+        src = cpu_state.XMM[cpu_rm];                                \
+        CLOCK_CYCLES(1);                                  \
+    } else {                                              \
+        SEG_CHECK_READ(cpu_state.ea_seg);                 \
+        src.q[0] = readmemq(easeg, cpu_state.eaaddr);     \
+        if (cpu_state.abrt)                               \
+            return 1;                                     \
+        src.q[1] = readmemq(easeg, cpu_state.eaaddr + 8); \
+        if (cpu_state.abrt)                               \
+            return 1;                                     \
+        CLOCK_CYCLES(2);                                  \
+    }
+
 #define MMX_ENTER()                          \
     if (!cpu_has_feature(CPU_FEATURE_MMX)) { \
         cpu_state.pc = cpu_state.oldpc;      \
         x86illegal();                        \
         return 1;                            \
     }                                        \
-    if (cr0 & 0xc) {                         \
+    if (cr0 & 0x8) {                         \
         x86_int(7);                          \
         return 1;                            \
     }                                        \
+    if (cr0 & 0x4) {                         \
+        cpu_state.pc = cpu_state.oldpc;       \
+        x86illegal();                         \
+        return 1;                            \
+    }                                        \
     x87_set_mmx()
+
+#define SSE_ENTER()  \
+    if (cr0 & 0x8) { \
+        x86_int(7);  \
+        return 1;    \
+    }                \
+    if ((cr0 & 0x4) || !(cr4 & CR4_OSFXSR)) { \
+        cpu_state.pc = cpu_state.oldpc;       \
+        x86illegal();                         \
+        return 1;                             \
+    }
 
 static int
 opEMMS(UNUSED(uint32_t fetchdat))
@@ -48,4 +79,21 @@ opEMMS(UNUSED(uint32_t fetchdat))
     x87_emms();
     CLOCK_CYCLES(100); /*Guess*/
     return 0;
+}
+
+static struct softfloat_status_t mxcsr_to_softfloat_status_word(void)
+{
+    struct softfloat_status_t status;
+    status.softfloat_exceptionFlags             = 0; // clear exceptions before execution
+    status.softfloat_roundingMode               = (cpu_state.mxcsr >> 13) & 3;
+    status.softfloat_flush_underflow_to_zero    = ((cpu_state.mxcsr >> 15) & 1) && ((cpu_state.mxcsr >> 11) & 1);
+    status.softfloat_suppressException          = 0;
+    status.softfloat_exceptionMasks             = (cpu_state.mxcsr >> 7) & 0x3f;
+    status.softfloat_denormals_are_zeros        = (cpu_state.mxcsr >> 6) & 1;
+    return status;
+}
+
+static void softfloat_status_word_to_mxcsr(struct softfloat_status_t status)
+{
+    cpu_state.mxcsr |= status.softfloat_exceptionFlags & 0x3f;
 }
