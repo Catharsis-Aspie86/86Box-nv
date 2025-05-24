@@ -164,6 +164,9 @@ extern const device_t stpc_atlas_device;
 extern const device_t stpc_serial_device;
 extern const device_t stpc_lpt_device;
 
+/* Symphony */
+extern const device_t sl82c461_device;
+
 /* UMC */
 extern const device_t umc_8886f_device;
 extern const device_t umc_8886af_device;
@@ -199,6 +202,8 @@ extern const device_t vlsi_scamp_device;
 extern const device_t wd76c10_device;
 
 /* Miscellaneous Hardware */
+extern const device_t dell_jumper_device;
+
 extern const device_t nec_mate_unk_device;
 
 extern const device_t phoenix_486_jumper_device;
